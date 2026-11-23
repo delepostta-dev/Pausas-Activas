@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protocolos HYB de pausas activas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Marca Juanma Solís: negro + amarillo de acento sobre fondo claro. Una columna, pensada para usar al lado de la compu o en el celular. */
+  --ink:#141414; --bg:#FAFAF7; --card:#FFFFFF; --line:#E4E1D8; --muted:#6B6860; --muted-dark:#B8B4AA;
+  --accent:#EEB625; --accent-soft:#FBF1D3; --chip:#F0EEE8;
+  --font:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px}
+
+header{background:var(--ink);color:#fff;padding:20px 0 30px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:40px;height:40px;flex:none}
+.brand b{display:block;font-weight:600;font-size:15px;line-height:1.1}
+.brand small{display:block;font-size:8.5px;letter-spacing:.38em;color:var(--muted-dark);font-weight:500;margin-top:4px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.16em;color:var(--accent);margin-top:26px}
+.eyebrow::before{content:"";width:16px;height:3px;background:var(--accent)}
+header h1{font-weight:600;font-size:clamp(30px,7.5vw,44px);line-height:1.06;margin:10px 0 10px;text-wrap:balance;letter-spacing:-.01em}
+header h1 em{font-style:normal;color:var(--accent)}
+header p{margin:0;color:var(--muted-dark);font-size:14.5px;max-width:48ch}
+.picks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:22px}
+.pick{background:#1F1F1F;border:1px solid #2E2E2E;border-radius:14px;padding:12px;text-align:left;cursor:pointer;color:#fff;min-height:44px}
+.pick b{display:block;font-size:22px;font-weight:600;color:var(--accent);line-height:1}
+.pick span{display:block;font-size:12.5px;margin-top:6px;color:#E9E6DE}
+.pick:hover{border-color:var(--accent)}
+
+main{padding:22px 0 40px}
+.kicker{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.16em;color:var(--muted);margin:0 0 10px}
+.kicker::before{content:"";width:14px;height:3px;background:var(--accent)}
+h2.title{font-size:24px;font-weight:600;margin:0 0 8px;text-wrap:balance}
+.lead{color:var(--muted);margin:0 0 16px;max-width:60ch}
+
+/* Plan del día */
+.today{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:28px}
+.today-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.today-h h2{margin:0;font-size:17px;font-weight:600}
+.today-h small{color:var(--muted);font-size:12.5px}
+.slots{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.slot{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--bg)}
+.slot input{width:22px;height:22px;accent-color:var(--ink);cursor:pointer}
+.slot label{cursor:pointer}
+.slot label b{display:block;font-size:14px;font-weight:600}
+.slot label span{font-size:12.5px;color:var(--muted)}
+.slot button{border:1.5px solid var(--ink);background:transparent;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:36px}
+.slot.done{background:var(--accent-soft)}
+.slot.done label b{text-decoration:line-through;text-decoration-thickness:2px}
+.steps{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.steps label{font-size:13.5px;font-weight:500}
+.steps input{font:inherit;font-size:16px;width:130px;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--chip);border-radius:99px;overflow:hidden;margin-top:14px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.bar-l{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* Cómo usarla */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:28px}
+.how div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.how b{display:block;font-size:13.5px;font-weight:600;margin-bottom:4px}
+.how span{font-size:12.5px;color:var(--muted)}
+
+/* Protocolos */
+.proto{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-bottom:16px;overflow:hidden;scroll-margin-top:12px}
+.proto-h{background:var(--ink);color:#fff;padding:16px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.proto-h .k{font-size:11px;font-weight:600;letter-spacing:.16em;color:var(--accent)}
+.proto-h h3{margin:0;font-size:22px;font-weight:600;grid-column:1}
+.proto-h p{margin:0;font-size:13px;color:var(--muted-dark);grid-column:1}
+.start{grid-row:1 / span 3;grid-column:2;background:var(--accent);color:var(--ink);border:0;border-radius:999px;padding:12px 16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:46px}
+.start svg{width:14px;height:14px}
+.meta{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px 0}
+.tag{font-size:11.5px;font-weight:500;padding:4px 9px;border-radius:6px;background:var(--chip)}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th{text-align:left;font-size:10.5px;letter-spacing:.12em;color:var(--muted);font-weight:600;padding:8px 16px;border-bottom:1px solid var(--line)}
+td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.n{width:28px;padding-right:0;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+td b{display:block;font-weight:600;font-size:14.5px}
+td small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+td.dose{white-space:nowrap;font-weight:600;font-size:13.5px;text-align:right}
+.vid{display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:var(--ink);color:#fff;text-decoration:none;border-radius:999px;padding:5px 11px 5px 7px;font-size:11.5px;font-weight:600}
+.vid svg{width:14px;height:14px}
+.vid.ext{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.keys{padding:14px 16px 16px;background:var(--bg);border-top:1px solid var(--line)}
+.keys b{font-size:12px;letter-spacing:.12em;color:var(--muted);font-weight:600}
+.keys ul{margin:8px 0 0;padding-left:18px;font-size:13.5px}
+.keys li{margin:4px 0}
+
+.rules{background:var(--ink);color:#fff;border-radius:16px;padding:18px 16px;margin-top:26px}
+.rules h2{font-size:16px;font-weight:600;margin:0 0 12px}
+.rules ol{margin:0;padding:0;list-style:none;display:grid;gap:10px;counter-reset:r}
+.rules li{display:grid;grid-template-columns:26px 1fr;gap:10px;font-size:13.5px;color:#E9E6DE}
+.rules li::before{counter-increment:r;content:counter(r);width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--ink);font-weight:600;font-size:12px;display:grid;place-items:center}
+.rules li b{color:#fff;font-weight:600}
+.cta{background:var(--accent);border-radius:16px;padding:20px 16px;margin-top:12px}
+.cta h2{margin:0 0 6px;font-size:18px;font-weight:600;text-wrap:balance}
+.cta p{margin:0 0 14px;font-size:14px}
+.cta a{display:inline-flex;align-items:center;background:var(--ink);color:#fff;text-decoration:none;font-weight:600;border-radius:999px;padding:12px 20px;min-height:46px}
+.cta small{display:block;margin-top:10px;font-size:12.5px}
+footer{color:var(--muted);font-size:11.5px;text-align:center;padding:8px 0 28px}
+
+/* Modo guiado */
+.player{position:fixed;inset:0;background:var(--ink);color:#fff;display:none;flex-direction:column;z-index:10}
+.player.on{display:flex}
+.p-top{display:flex;justify-content:space-between;align-items:center;padding:16px}
+.p-top span{font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:600}
+.p-close{background:transparent;border:1.5px solid #444;color:#fff;border-radius:999px;padding:6px 14px;cursor:pointer;min-height:40px}
+.p-prog{display:flex;gap:4px;padding:0 16px}
+.p-prog i{flex:1;height:4px;border-radius:4px;background:#333}
+.p-prog i.on{background:var(--accent)}
+.p-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16px;gap:10px}
+.p-step{font-size:13px;color:var(--muted-dark)}
+.p-name{font-size:clamp(24px,6vw,36px);font-weight:600;line-height:1.15;max-width:18ch;text-wrap:balance}
+.p-dose{font-size:15px;color:var(--accent);font-weight:600}
+.p-cue{font-size:14px;color:#D8D4CA;max-width:38ch}
+.p-time{font-size:clamp(64px,18vw,110px);font-weight:600;font-variant-numeric:tabular-nums;line-height:1;margin-top:8px}
+.p-next{font-size:12.5px;color:var(--muted-dark)}
+.p-ctrl{display:flex;gap:10px;justify-content:center;padding:16px 16px 28px}
+.p-ctrl button{border-radius:999px;padding:12px 18px;font-weight:600;cursor:pointer;min-height:48px;border:1.5px solid #444;background:transparent;color:#fff}
+.p-ctrl button.main{background:var(--accent);border-color:var(--accent);color:var(--ink);min-width:130px}
+@media (max-width:520px){.how{grid-template-columns:1fr}.picks{grid-template-columns:1fr}.pick{display:flex;align-items:baseline;gap:10px}.pick span{margin:0}.proto-h{grid-template-columns:1fr}.start{grid-row:auto;grid-column:1;justify-self:start;margin-top:6px}}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M6 50H31M69 50H94" stroke="#fff" stroke-width="4" stroke-linecap="round"/><rect x="12" y="31" width="8" height="38" rx="3" fill="#fff"/><rect x="22" y="37" width="5" height="26" rx="2" fill="#fff"/><rect x="80" y="31" width="8" height="38" rx="3" fill="#fff"/><rect x="73" y="37" width="5" height="26" rx="2" fill="#fff"/><polyline points="31,50 39,50 44,35 51,65 56,42 60,50 69,50" fill="none" stroke="#EEB625" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><b>Juanma Solís</b><small>COACHING ONLINE</small></div>
+    </div>
+    <div class="eyebrow">MÉTODO HYB · RECURSO PARA ALUMNOS</div>
+    <h1>Pausas activas: <em>Protocolos HYB</em></h1>
+    <p>Tres formatos de pausa activa para cortar el sedentarismo del home office, soltar la espalda y sumar pasos entre reunión y reunión. Sin material y sin cambiarte de ropa.</p>
+    <div class="picks" role="group" aria-label="Elegí según el tiempo que tenés">
+      <button class="pick" type="button" data-go="reset"><b>3 min</b><span>Reset rápido</span></button>
+      <button class="pick" type="button" data-go="movilidad"><b>7 min</b><span>Movilidad</span></button>
+      <button class="pick" type="button" data-go="activacion"><b>10 min</b><span>Activación</span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="today" aria-labelledby="todayH">
+    <div class="today-h"><h2 id="todayH">Tu día de trabajo</h2><small id="todayCount">0 de 4 pausas</small></div>
+    <ul class="slots" id="slots"></ul>
+    <div class="steps">
+      <label for="stepsIn">Pasos de hoy</label>
+      <input id="stepsIn" type="number" inputmode="numeric" min="0" placeholder="Ej.: 4500">
+      <label for="goalIn">Objetivo</label>
+      <input id="goalIn" type="number" inputmode="numeric" min="0" placeholder="Tu objetivo">
+    </div>
+    <div class="bar" aria-hidden="true"><i id="barFill"></i></div>
+    <div class="bar-l" id="barLabel">Poné tu objetivo de pasos para ver el avance.</div>
+  </section>
+
+  <p class="kicker">Cómo usarla</p>
+  <div class="how">
+    <div><b>Poné una alarma</b><span>Cada ____ minutos sentado (probá entre 45 y 60) y ajustalo a tus reuniones.</span></div>
+    <div><b>Elegí por tiempo</b><span>¿3, 7 o 10 minutos? Usá la pausa que entre en ese hueco.</span></div>
+    <div><b>Tocá «Empezar»</b><span>La app te guía ejercicio por ejercicio con temporizador.</span></div>
+  </div>
+
+  <p class="kicker">Los 3 protocolos</p>
+  <div id="protos"></div>
+
+  <section class="rules" aria-labelledby="rr">
+    <h2 id="rr">Para que se vuelva hábito</h2>
+    <ol>
+      <li><span><b>Mejor corto y seguido</b> que largo una vez. Varias pausas cortas en el día suman más que una sola.</span></li>
+      <li><span><b>Atá la pausa a algo que ya hacés:</b> terminar una reunión, ir a buscar agua o servirte un café.</span></li>
+      <li><span><b>Las llamadas, caminando.</b> Si no necesitás la pantalla, hablá de pie o caminando por la casa.</span></li>
+      <li><span><b>Sin dolor.</b> Moverte tiene que sentirse bien. Si algo molesta, hacelo más chico o salteá ese ejercicio.</span></li>
+    </ol>
+  </section>
+
+  <section class="cta" aria-labelledby="cta">
+    <h2 id="cta">¿Dudas con algún ejercicio?</h2>
+    <p>Si algo no te sale o te genera molestia, contame y lo adaptamos a tu caso.</p>
+    <a href="https://wa.me/message/2Q52S7TE3VSGA1" target="_blank" rel="noopener">Escribime por WhatsApp</a>
+    <small>o por el chat de la app</small>
+  </section>
+</main>
+<footer>Juanma Solís · Entrenamiento híbrido para vidas reales</footer>
+
+<div class="player" id="player" role="dialog" aria-modal="true" aria-labelledby="pName">
+  <div class="p-top"><span id="pTitle"></span><button class="p-close" id="pClose" type="button">Salir</button></div>
+  <div class="p-prog" id="pProg"></div>
+  <div class="p-body">
+    <div class="p-step" id="pStep"></div>
+    <div class="p-name" id="pName"></div>
+    <div class="p-dose" id="pDose"></div>
+    <div class="p-cue" id="pCue"></div>
+    <div class="p-time" id="pTime" aria-live="off"></div>
+    <div class="p-next" id="pNext"></div>
+  </div>
+  <div class="p-ctrl">
+    <button type="button" id="pPrev">Anterior</button>
+    <button type="button" class="main" id="pPlay">Pausar</button>
+    <button type="button" id="pSkip">Siguiente</button>
+  </div>
+</div>
+
+<script>
+// [nombre, dosis, segundos en el modo guiado, indicación, video propio, video de referencia]
+const PROTOS = [
+ {id:"reset", k:"PROTOCOLO 1 · 3 MIN", name:"Reset rápido", when:"Entre reuniones o cuando sentís el cuerpo trabado.", tags:["De pie","Sin material","Al lado del escritorio"], ex:[
+  ["Movilidad articular","45 s",45,"Recorré cuello, hombros, cadera y tobillos con movimientos amplios y lentos.","uyEr5vXncJA",""],
+  ["Movilidad escapular","30 s",30,"Mové los omóplatos arriba, abajo, adelante y atrás.","MSG9RJ2TRlI",""],
+  ["Sentarse y pararse de la silla","10 reps",40,"Sin usar las manos. Bajá lento hasta rozar la silla.","","5fcd0pPWLEQ"],
+  ["Elevación de talones","15 reps",35,"Apoyate en el escritorio. Subí alto y bajá lento.","","rzNyHjSFUrs"],
+  ["Respiración con brazos arriba","30 s",30,"Inhalá subiendo los brazos, exhalá bajándolos lento.","","isUJGq_GLas"],
+ ], keys:["Hacela de pie, al lado del escritorio.","Si estás en una llamada sin cámara, podés hacerla en ese momento."]},
+ {id:"movilidad", k:"PROTOCOLO 2 · 7 MIN", name:"Movilidad", when:"Para la espalda, el cuello y la cadera después de muchas horas sentado.", tags:["Piso o de pie","Sin material","Suave"], ex:[
+  ["Movilidad escapular","45 s",45,"Mové los omóplatos en todas las direcciones.","MSG9RJ2TRlI",""],
+  ["Y-W-T sin peso","2 vueltas",60,"Dibujá las letras con los brazos, juntando los omóplatos en cada una.","sI97dGsmpqU",""],
+  ["Rotación de columna en cuadrupedia","6 por lado",60,"Mano en la nuca: abrí el codo hacia el techo siguiéndolo con la mirada.","","elZg-efJ-aY"],
+  ["Estiramiento de cadera en estocada","30 s por lado",60,"Rodilla atrás apoyada, glúteo apretado y la cadera adelante.","","H6oSG_9x2TI"],
+  ["Dorsiflexión de tobillo","10 por lado",60,"Llevá la rodilla adelante sin despegar el talón.","xQlFTTZAJzs",""],
+  ["Bisagra de cadera sin peso","10 reps",40,"Manos en la cadera: llevala atrás con la espalda firme y volvé.","","8qKzfi5JLyg"],
+  ["Dead bug","6 por lado",60,"Zona lumbar pegada al piso. Lento.","eloBOpnw7YI",""],
+ ], keys:["Buscá movimiento cómodo, no llegar al máximo.","Ideal a media mañana y a media tarde."]},
+ {id:"activacion", k:"PROTOCOLO 3 · 10 MIN", name:"Activación", when:"Para subir las pulsaciones, despertar las piernas y sumar pasos.", tags:["De pie","Sin material","2 vueltas"], ex:[
+  ["Caminata por la casa","1 min",60,"A paso rápido. Si tenés escaleras, usalas.","","oQEyAHwbZ5g"],
+  ["Sentadilla con peso corporal","12 reps",45,"Bajá con control, el pecho alto.","","cqoNTr02fRk"],
+  ["Flexiones apoyado en el escritorio","8–10 reps",40,"Asegurate de que el escritorio no se mueva. Cuerpo en línea.","T_OW2ySuKaI",""],
+  ["Step-down en un escalón","8 por lado",60,"Bajá lento tocando apenas el piso con el talón.","kfd4tZTrHZU",""],
+  ["Bear en cuadrupedia","30 s",30,"Rodillas apenas despegadas del piso, espalda quieta.","V04GyCoqoMs",""],
+  ["Caminata por la casa","1 min",60,"Bajá un poco el ritmo y respirá.","","oQEyAHwbZ5g"],
+ ], keys:["Hacé el circuito 2 veces. Si tenés menos tiempo, una sola vuelta también suma.","Tiene que dejarte con más energía, no agotado."]},
+];
+const SLOTS = [
+  {t:"Primera hora", p:"reset", s:"Antes de abrir el mail"},
+  {t:"Media mañana", p:"movilidad", s:"Para soltar la espalda"},
+  {t:"Después de almorzar", p:"activacion", s:"Para no quedarte quieto"},
+  {t:"Media tarde", p:"reset", s:"Cuando baja la energía"},
+];
+const play = `<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#EEB625"/><path d="M6.4 5v6l4.8-3z" fill="#141414"/></svg>`;
+const $ = id => document.getElementById(id);
+const byId = id => PROTOS.find(p => p.id === id);
+
+// Protocolos
+$("protos").innerHTML = PROTOS.map(p => `
+<article class="proto" id="${p.id}">
+  <div class="proto-h"><span class="k">${p.k}</span><h3>${p.name}</h3><p>${p.when}</p>
+    <button class="start" type="button" data-start="${p.id}"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1v10l9-5z" fill="#141414"/></svg>Empezar</button></div>
+  <div class="meta">${p.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div>
+  <table><thead><tr><th></th><th>EJERCICIO</th><th style="text-align:right">DOSIS</th></tr></thead><tbody>
+  ${p.ex.map((e, i) => `<tr><td class="n">${i + 1}</td><td><b>${e[0]}</b><small>${e[3]}</small>${e[4] ? `<a class="vid" href="https://youtube.com/shorts/${e[4]}" target="_blank" rel="noopener">${play}Ver video</a>` : e[5] ? `<a class="vid ext" href="https://www.youtube.com/watch?v=${e[5]}" target="_blank" rel="noopener">${play}Video de referencia</a>` : ""}</td><td class="dose">${e[1]}</td></tr>`).join("")}
+  </tbody></table>
+  <div class="keys"><b>CLAVES</b><ul>${p.keys.map(k => `<li>${k}</li>`).join("")}</ul></div>
+</article>`).join("");
+
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-go]"); if (g) $(g.dataset.go).scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
+  const s = e.target.closest("[data-start]"); if (s) startPlayer(s.dataset.start);
+});
+
+// Plan del día (se guarda solo en este navegador, por día)
+const KEY = "pausas-" + new Date().toISOString().slice(0, 10);
+let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
+let goal = ""; try { goal = localStorage.getItem("pausas-goal") || ""; } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
+function renderSlots() {
+  $("slots").innerHTML = SLOTS.map((s, i) => {
+    const p = byId(s.p), done = !!(saved.done || [])[i];
+    return `<li class="slot${done ? " done" : ""}"><input type="checkbox" id="sl${i}" data-sl="${i}" ${done ? "checked" : ""}><label for="sl${i}"><b>${s.t} · ${p.name}</b><span>${s.s}</span></label><button type="button" data-start="${p.id}" aria-label="Empezar ${p.name}">Empezar</button></li>`;
+  }).join("");
+  const n = (saved.done || []).filter(Boolean).length;
+  $("todayCount").textContent = `${n} de ${SLOTS.length} pausas`;
+}
+$("slots").addEventListener("change", e => {
+  const i = e.target.dataset.sl; if (i == null) return;
+  saved.done = saved.done || []; saved.done[i] = e.target.checked; save(); renderSlots();
+});
+function renderSteps() {
+  const s = +$("stepsIn").value || 0, g = +$("goalIn").value || 0;
+  if (!g) { $("barFill").style.width = "0"; $("barLabel").textContent = "Poné tu objetivo de pasos para ver el avance."; return; }
+  const pct = Math.min(100, Math.round(s / g * 100));
+  $("barFill").style.width = pct + "%";
+  $("barLabel").textContent = s >= g ? "¡Objetivo cumplido!" : `${pct}% · te faltan ${(g - s).toLocaleString("es-UY")} pasos`;
+}
+$("stepsIn").value = saved.steps || ""; $("goalIn").value = goal;
+$("stepsIn").addEventListener("input", () => { saved.steps = $("stepsIn").value; save(); renderSteps(); });
+$("goalIn").addEventListener("input", () => { try { localStorage.setItem("pausas-goal", $("goalIn").value); } catch (e) {} renderSteps(); });
+renderSlots(); renderSteps();
+
+// Modo guiado
+let P = null, idx = 0, left = 0, timer = null, running = false, lastFocus = null;
+function startPlayer(id) {
+  P = byId(id); idx = 0; lastFocus = document.activeElement;
+  $("pTitle").textContent = P.k;
+  $("pProg").innerHTML = P.ex.map(() => "<i></i>").join("");
+  $("player").classList.add("on"); document.body.style.overflow = "hidden";
+  load(); $("pPlay").focus();
+}
+function load() {
+  const e = P.ex[idx]; left = e[2];
+  $("pStep").textContent = `Ejercicio ${idx + 1} de ${P.ex.length}`;
+  $("pName").textContent = e[0]; $("pDose").textContent = e[1]; $("pCue").textContent = e[3];
+  $("pNext").textContent = idx + 1 < P.ex.length ? `Después: ${P.ex[idx + 1][0]}` : "Último ejercicio";
+  [...$("pProg").children].forEach((b, i) => b.classList.toggle("on", i <= idx));
+  tick(); run(true);
+}
+function fmt(s) { return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+function tick() { $("pTime").textContent = fmt(left); }
+function run(on) {
+  clearInterval(timer); running = on; $("pPlay").textContent = on ? "Pausar" : "Seguir";
+  if (on) timer = setInterval(() => { left--; tick(); if (left <= 0) next(); }, 1000);
+}
+function next() {
+  if (idx + 1 < P.ex.length) { idx++; load(); }
+  else { run(false); $("pName").textContent = "¡Pausa terminada!"; $("pDose").textContent = ""; $("pCue").textContent = "Marcala en tu día de trabajo y volvé a lo tuyo."; $("pTime").textContent = "✓"; $("pNext").textContent = ""; $("pStep").textContent = ""; $("pPlay").textContent = "Repetir"; idx = P.ex.length; }
+}
+function close() { run(false); $("player").classList.remove("on"); document.body.style.overflow = ""; if (lastFocus) lastFocus.focus(); }
+$("pPlay").addEventListener("click", () => { if (idx >= P.ex.length) { idx = 0; load(); } else run(!running); });
+$("pSkip").addEventListener("click", () => { if (idx < P.ex.length) next(); });
+$("pPrev").addEventListener("click", () => { if (idx > 0) { idx = Math.min(idx, P.ex.length) - 1; load(); } });
+$("pClose").addEventListener("click", close);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("player").classList.contains("on")) close(); });
+</script>
+</body>
+</html>
